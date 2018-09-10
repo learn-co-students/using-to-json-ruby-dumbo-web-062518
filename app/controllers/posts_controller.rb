@@ -6,6 +6,11 @@ class PostsController < ApplicationController
   end
 
   def show
+    @post = Post.find(params[:id])
+    respond_to do |format|
+      format.html { render :show }
+      format.json { render json: @post.to_json(only: [:title, :description, :id], include: [ author: { only: [:name]}])}
+    end
   end
 
   def new
@@ -13,12 +18,18 @@ class PostsController < ApplicationController
   end
 
   def create
-    @post = Post.create(post_params)
+    new_params = {}
+    new_params["title"] = post_params["title"]
+    new_params["description"] = post_params["description"]
+    new_params["author"] = Author.find(post_params["author"].to_i)
+    byebug
+    @post = Post.create(new_params)
     @post.save
     redirect_to post_path(@post)
   end
 
   def edit
+    @post = Post.find(params[:id])
   end
 
   def update
@@ -28,7 +39,7 @@ class PostsController < ApplicationController
 
   def post_data
     post = Post.find(params[:id])
-    render json: PostSerializer.serialize(post)
+    render json: post.to_json(only: [:title, :description, :id], include: [ author: { only: [:name]}])
   end
 
 private
@@ -39,6 +50,7 @@ private
 
   # Never trust parameters from the scary internet, only allow the white list through.
   def post_params
-    params.require(:post).permit(:title, :description)
+    params.require(:post).permit(:title, :description, :author)
+
   end
 end
